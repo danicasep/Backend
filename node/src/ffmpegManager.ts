@@ -8,6 +8,7 @@ type ProcMap = Record<string, ChildProcess | null>;;
 export class FfmpegManager {
   baseHlsDir: string;
   procs: ProcMap = {};
+  restartTimers: Record<string, NodeJS.Timeout> = {};
 
   constructor(baseHlsDir = "../hls") {
     this.baseHlsDir = baseHlsDir;
@@ -54,10 +55,62 @@ export class FfmpegManager {
       console.log(`ffmpeg for ${id} exited code=${code} sig=${sig}`);
       this.procs[id] = null;
       // opsi: restart otomatis setelah delay
-      setTimeout(() => {
-        if (!this.procs[id]) this.startCamera(camera);
-      }, 3000);
+      // Clear restart timer jika ada
+      if (this.restartTimers[id]) {
+        clearTimeout(this.restartTimers[id]);
+        delete this.restartTimers[id];
+      }
     });
+    
+    // Set timer untuk restart setelah 30 menit
+    this.scheduleRestart(camera);
+  }
+
+  scheduleRestart(camera: CameraConfig) {
+    const id = camera.id;
+    
+    // Clear existing timer
+    if (this.restartTimers[id]) {
+      clearTimeout(this.restartTimers[id]);
+    }
+
+    // Set timer 30 menit (1800000 ms)
+    this.restartTimers[id] = setTimeout(async () => {
+      console.log(`Restarting camera ${id} after 30 minutes...`);
+      
+      // Stop current process
+      this.stopCamera(id);
+      
+      // Delete all files
+      await this.cleanupCameraFiles(id);
+      
+      // Wait a bit then restart
+      setTimeout(() => {
+        this.startCamera(camera);
+      }, 2000);
+      
+    }, 30 * 60 * 1000); // 30 menit
+  }
+
+  async cleanupCameraFiles(cameraId: string) {
+    const cameraDir = path.join(this.baseHlsDir, `cam_${cameraId}`);
+    
+    try {
+      if (fs.existsSync(cameraDir)) {
+        const files = fs.readdirSync(cameraDir);
+        
+        for (const file of files) {
+          if (file.endsWith('.ts') || file.endsWith('.m3u8')) {
+            const filePath = path.join(cameraDir, file);
+            fs.unlinkSync(filePath);
+          }
+        }
+        
+        console.log(`Cleaned up all files for camera ${cameraId}`);
+      }
+    } catch (error) {
+      console.error(`Error cleaning up camera ${cameraId}:`, error);
+    }
   }
 
   stopCamera(id: string) {
