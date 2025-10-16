@@ -80,11 +80,6 @@ services:
     # Koneksikan Ke Network localapp
     networks:
       - localapp
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   rtsp-hls:
     build: ./node
