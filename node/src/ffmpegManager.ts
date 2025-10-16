@@ -118,6 +118,12 @@ export class FfmpegManager {
     if (!p) return;
     p.kill("SIGINT");
     this.procs[id] = null;
+    
+    // Clear restart timer
+    if (this.restartTimers[id]) {
+      clearTimeout(this.restartTimers[id]);
+      delete this.restartTimers[id];
+    }
   }
 
   startAll(cameras: CameraConfig[]) {
@@ -126,5 +132,8 @@ export class FfmpegManager {
 
   stopAll() {
     for (const id in this.procs) this.stopCamera(id);
+    // Clear all timers
+    Object.values(this.restartTimers).forEach(timer => clearTimeout(timer));
+    this.restartTimers = {};
   }
 }
