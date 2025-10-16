@@ -38,7 +38,7 @@ export class FfmpegManager {
       "-reconnect_streamed", "1",
       "-reconnect_delay_max", "5",
       "-hls_flags", "delete_segments+program_date_time+omit_endlist",
-      "-hls_segment_filename", path.join(cameraDir, "seg-%03d.ts"),
+      "-hls_segment_filename", path.join(cameraDir, "seg-%Y%m%d-%H%M%S.ts"),
       path.join(cameraDir, "index.m3u8"),
     ];
 
