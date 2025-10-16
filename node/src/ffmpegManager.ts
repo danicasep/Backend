@@ -46,7 +46,7 @@ export class FfmpegManager {
     this.procs[id] = p;
 
     p.stdout.on("data", d => console.log(`[ffmpeg ${id} stdout] ${d}`));
-    // p.stderr.on("data", d => console.log(`[ffmpeg ${id} stderr] ${d}`));
+    p.stderr.on("data", d => console.log(`[ffmpeg ${id} stderr] ${d}`));
 
     p.on("exit", (code, sig) => {
       console.log(`ffmpeg for ${id} exited code=${code} sig=${sig}`);
