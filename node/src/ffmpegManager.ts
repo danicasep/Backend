@@ -33,12 +33,9 @@ export class FfmpegManager {
       "-c:v", "copy",
       "-c:a", "aac",
       "-f", "hls",
-      "-hls_time", "10",
-      "-hls_list_size", "180",
-      "-reconnect", "1",
-      "-reconnect_streamed", "1",
-      "-reconnect_delay_max", "5",
-      "-hls_flags", "program_date_time+omit_endlist",
+      "-hls_time", "3",
+      "-hls_list_size", "10",
+      "-hls_flags", "delete_segments+program_date_time+omit_endlist",
       "-strftime", "1",
       "-hls_segment_filename", path.join(cameraDir, "seg-%Y%m%d-%H%M%S.ts"),
       path.join(cameraDir, "index.m3u8"),
@@ -65,6 +62,12 @@ export class FfmpegManager {
     p.on("error", (error) => {
       console.error(`ffmpeg for ${id} process error:`, error);
       this.procs[id] = null;
+    });
+
+    p.on('close', (code, sig) => {
+      if (code !== 0) {
+        console.log(`ffmpeg close process exited with code=${code} sig=${sig}`);
+      }
     });
     // Set timer untuk restart setelah 30 menit
     this.scheduleRestart(camera);
