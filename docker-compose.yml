@@ -24,7 +24,7 @@ services:
     # Ekspose Port
     ports:
       # 80 (http://localhost)
-      - "80:80"
+      - "1234:1234"
     # Jalankan Nginx Jika Service php Dan db Sudah Berjalan
     depends_on:
       - php
