@@ -61,14 +61,18 @@ export class FfmpegManager {
         delete this.restartTimers[id];
       }
     });
-    
+
+    p.on("error", (error) => {
+      console.error(`ffmpeg for ${id} process error:`, error);
+      this.procs[id] = null;
+    });
     // Set timer untuk restart setelah 30 menit
     this.scheduleRestart(camera);
   }
 
   scheduleRestart(camera: CameraConfig) {
     const id = camera.id;
-    
+
     // Clear existing timer
     if (this.restartTimers[id]) {
       clearTimeout(this.restartTimers[id]);
@@ -77,35 +81,35 @@ export class FfmpegManager {
     // Set timer 30 menit (1800000 ms)
     this.restartTimers[id] = setTimeout(async () => {
       console.log(`Restarting camera ${id} after 30 minutes...`);
-      
+
       // Stop current process
       this.stopCamera(id);
-      
+
       // Delete all files
       await this.cleanupCameraFiles(id);
-      
+
       // Wait a bit then restart
       setTimeout(() => {
         this.startCamera(camera);
       }, 2000);
-      
+
     }, 30 * 60 * 1000); // 30 menit
   }
 
   async cleanupCameraFiles(cameraId: string) {
     const cameraDir = path.join(this.baseHlsDir, `cam_${cameraId}`);
-    
+
     try {
       if (fs.existsSync(cameraDir)) {
         const files = fs.readdirSync(cameraDir);
-        
+
         for (const file of files) {
           if (file.endsWith('.ts') || file.endsWith('.m3u8')) {
             const filePath = path.join(cameraDir, file);
             fs.unlinkSync(filePath);
           }
         }
-        
+
         console.log(`Cleaned up all files for camera ${cameraId}`);
       }
     } catch (error) {
@@ -118,7 +122,7 @@ export class FfmpegManager {
     if (!p) return;
     p.kill("SIGINT");
     this.procs[id] = null;
-    
+
     // Clear restart timer
     if (this.restartTimers[id]) {
       clearTimeout(this.restartTimers[id]);
