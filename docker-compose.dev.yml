@@ -1,0 +1,14 @@
+services:
+  rtsp-hls:
+    build: .
+    command: npm run dev
+    volumes:
+      - ./src:/usr/src/app/src
+      - ./config:/usr/src/app/config
+      - ./public:/usr/src/app/public
+      - ./hls:/usr/src/app/hls
+      - /usr/src/app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development

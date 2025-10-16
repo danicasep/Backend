@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>RTSP HLS Viewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+
+<body>
+  <h2>Viewer</h2>
+  <label>Camera:
+    <select id="camSelect">
+      <option value="cam1">cam1</option>
+      <option value="cam2">cam2</option>
+    </select>
+  </label>
+  <video id="video" controls autoplay playsinline width="800" height="450"></video>
+
+  <script>
+    const video = document.getElementById('video');
+    const select = document.getElementById('camSelect');
+
+    function getQueryParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+    const presetCam = getQueryParam('cam');
+    if (presetCam) select.value = presetCam;
+
+    async function load(camId) {
+      const url = `/hls/${camId}/index.m3u8`;
+      if (Hls.isSupported()) {
+        const hls = new Hls({
+          liveSyncDuration: 3,
+          liveMaxLatencyDuration: 5,
+          manifestLoadingTimeOut: 20000,
+          fragLoadingTimeOut: 20000,
+          enableWorker: true,
+        });
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          video.play();
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', function () {
+          video.play();
+        });
+      } else {
+        alert('Browser tidak support HLS. Gunakan Chrome/Firefox (pakai hls.js) atau Safari.');
+      }
+    }
+
+    select.addEventListener('change', () => load(select.value));
+    load(select.value);
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,125 @@
+version: "3.8"
+volumes:
+  # Untuk Menyimpan Seluruh Data Dalam Database
+  cctvdb:
+  redis-store:
+  cloudbeaver_data:
+
+# Mendefinisikan Networks
+networks:
+  # Untuk Mengkoneksikan Antar Services
+  localapp:
+    driver: bridge
+services:
+  nginx:
+    container_name: "cctv-nginx"
+    # Gunakan Image Nginx Tag Alpine
+    image: nginx:alpine
+    # Kaitkan Folder Lokal Ke Container
+    volumes:
+      # Folder Web
+      - "./backend:/var/www/backend"
+      # Folder Konfigurasi Nginx
+      - "./.build/nginx/conf.d:/etc/nginx/conf.d"
+    # Ekspose Port
+    ports:
+      # 80 (http://localhost)
+      - "80:80"
+    # Jalankan Nginx Jika Service php Dan db Sudah Berjalan
+    depends_on:
+      - php
+      - cctv-db
+    # Koneksikan Ke Network localapp
+    networks:
+      - localapp
+
+  php:
+    # Build Image Dengan Dockerfile Di Folder ./.build/php
+    build: ./.build/php
+    # Kaitkan Folder Lokal Ke Container
+    volumes:
+      # Jalankan PHP Di Semua Folder Web
+      - "./backend:/var/www/backend"
+    # Koneksikan Ke Network localapp
+    networks:
+      - localapp
+  redis:
+    # build: ./.build/redis
+    image: redis:alpine
+    # Koneksikan Ke Network localapp
+    networks:
+      - localapp
+    volumes:
+      - type: volume
+        source: redis-store
+        target: /data
+        volume:
+          nocopy: true
+    ports:
+      - "6379:6379"
+
+  cctv-db:
+    container_name: "cctv-db"
+    # Gunakan Image mysql Tag latest
+    # Build Image Dengan Dockerfile Di Folder ./.build/mysql
+    image: mysql:8.0
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password --bind-address=0.0.0.0
+    # Environment Yang Dibutuhkan mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_USER: "${PMA_USER}"
+      MYSQL_PASSWORD: "${PMA_PASSWORD}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+    # Expose Port Agar Dapat Diakses Melalui Aplikasi MYSQL Client (phpmyadmin)
+    ports:
+      - "3306:3306"
+    # Simpan Semua Data Dalam Volumes cctvdb
+    volumes:
+      - "cctvdb:/var/lib/mysql"
+    # Koneksikan Ke Network localapp
+    networks:
+      - localapp
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rtsp-hls:
+    build: ./node
+    depends_on:
+      cctv-db:
+        condition: service_healthy
+    # Koneksikan Ke Network localapp
+    networks:
+      - localapp
+    container_name: rtsp-hls-node
+    ports:
+      - "3333:3333"
+    volumes:
+      - ./node/hls:/usr/src/app/hls # persistent segments
+      - ./node/config:/usr/src/app/config:ro
+    environment:
+      - NODE_ENV=production
+      - CAMERA_CONFIG=/usr/src/app/config/cameras.json
+      - HLS_DIR=/usr/src/app/hls
+    restart: unless-stopped
+
+  cloudbeaver:
+    image: dbeaver/cloudbeaver:latest
+    container_name: "cctv-cloudbeaver"
+    restart: always
+    depends_on:
+      cctv-db:
+        condition: service_healthy
+    ports:
+      - "8082:8978"
+    environment:
+      CB_SERVER_NAME: "CCTV Database Manager"
+      CB_ADMIN_NAME: admin
+      CB_ADMIN_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+    networks:
+      - localapp
+    volumes:
+      - cloudbeaver_data:/opt/cloudbeaver/workspace

@@ -1,0 +1,85 @@
+import express from "express";
+import path from "path";
+import fs from "fs";
+import cors from "cors";
+import { FfmpegManager } from "./ffmpegManager";
+import { CameraConfig } from "./types";
+import { Database } from "./database/database";
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3333;
+const HLS_DIR = "./hls";
+const CAMERA_CONFIG = "./config/camera.json";
+
+app.use(cors({ origin: "*" }));
+
+let cameras: CameraConfig[] = [];
+
+// baca config kamera
+try {
+  const raw = fs.readFileSync(CAMERA_CONFIG, "utf-8");
+  cameras = JSON.parse(raw) as CameraConfig[];
+} catch (err) {
+  console.error("Failed to load camera config:", err);
+  process.exit(1);
+}
+
+const manager = new FfmpegManager(HLS_DIR);
+
+initCameras();
+
+// inisialisasi kamera dari database
+async function initCameras(isStopCameras = false) {
+  const database = new Database();
+  try {
+    const rows = await database.select('SELECT id, name, rtspUrl FROM cctv WHERE deleted_at IS NULL');
+    cameras = rows.map(row => ({
+      id: row.id,
+      rtspUrl: row.rtspUrl,
+      name: row.name,
+      hlsFolder: `${HLS_DIR}/cam_${row.id}`,
+    }));
+    console.log(`Loaded ${cameras.length} cameras from database.`);
+
+    const manager = new FfmpegManager(HLS_DIR);
+    if (isStopCameras) manager.stopAll();
+    manager.startAll(cameras);
+  } catch (err) {
+    console.error('Failed to load cameras from database:', err);
+  }
+}
+
+// static serve HLS folder and public
+app.use("/hls", express.static(HLS_DIR));
+app.use("/public", express.static(path.join(__dirname, "..", "public")));
+
+// endpoint untuk menambah/ubah kamera runtime (opsional)
+app.use(express.json());
+app.post("/api/connect", (req, res) => {
+  const { token } = req.body;
+  if (token !== process.env.TOKEN) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  res.json({ ok: true });
+});
+app.get("/api/camera/restart", async (req, res) =>  {
+  await initCameras(true);
+  res.json({ ok: true });
+});
+
+app.get("/", (_, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "viewer.html"));
+});
+
+process.on("SIGINT", () => {
+  console.log("Shutting down...");
+  manager.stopAll();
+  process.exit(0);
+});
+
+app.listen(PORT, () => {
+  console.log(`Server listening on http://0.0.0.0:${PORT}`);
+  console.log(`Viewer: http://0.0.0.0:${PORT}/`);
+});
