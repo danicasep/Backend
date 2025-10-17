@@ -8,7 +8,6 @@ type ProcMap = Record<string, ChildProcess | null>;;
 export class FfmpegManager {
   baseHlsDir: string;
   procs: ProcMap = {};
-  restartTimers: Record<string, NodeJS.Timeout> = {};
 
   constructor(baseHlsDir = "../hls") {
     this.baseHlsDir = baseHlsDir;
@@ -55,12 +54,6 @@ export class FfmpegManager {
     p.on("exit", (code, sig) => {
       console.log(`ffmpeg for ${id} exited code=${code} sig=${sig}`);
       this.procs[id] = null;
-      // opsi: restart otomatis setelah delay
-      // Clear restart timer jika ada
-      if (this.restartTimers[id]) {
-        clearTimeout(this.restartTimers[id]);
-        delete this.restartTimers[id];
-      }
     });
 
     p.on("error", (error) => {
@@ -73,34 +66,6 @@ export class FfmpegManager {
         console.log(`ffmpeg close process exited with code=${code} sig=${sig}`);
       }
     });
-    // Set timer untuk restart setelah 30 menit
-    this.scheduleRestart(camera);
-  }
-
-  scheduleRestart(camera: CameraConfig) {
-    const id = camera.id;
-
-    // Clear existing timer
-    if (this.restartTimers[id]) {
-      clearTimeout(this.restartTimers[id]);
-    }
-
-    // Set timer 30 menit (1800000 ms)
-    this.restartTimers[id] = setTimeout(async () => {
-      console.log(`Restarting camera ${id} after 30 minutes...`);
-
-      // Stop current process
-      this.stopCamera(id);
-
-      // Delete all files
-      await this.cleanupCameraFiles(id);
-
-      // Wait a bit then restart
-      setTimeout(() => {
-        this.startCamera(camera);
-      }, 2000);
-
-    }, 30 * 60 * 1000); // 30 menit
   }
 
   async cleanupCameraFiles(cameraId: string) {
@@ -130,11 +95,6 @@ export class FfmpegManager {
     p.kill("SIGINT");
     this.procs[id] = null;
 
-    // Clear restart timer
-    if (this.restartTimers[id]) {
-      clearTimeout(this.restartTimers[id]);
-      delete this.restartTimers[id];
-    }
   }
 
   startAll(cameras: CameraConfig[]) {
@@ -143,8 +103,5 @@ export class FfmpegManager {
 
   stopAll() {
     for (const id in this.procs) this.stopCamera(id);
-    // Clear all timers
-    Object.values(this.restartTimers).forEach(timer => clearTimeout(timer));
-    this.restartTimers = {};
   }
 }
