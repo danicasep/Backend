@@ -30,7 +30,7 @@ class AuthController extends Controller
 
     if ($user && Hash::check($request->password, $user->password)) {
 
-      if (!$user->is_active) {
+      if (!$user->isActive) {
         return response()->json([
           "status" => false,
           "message" => "Akun Anda sudah dinonaktifkan!",

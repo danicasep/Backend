@@ -17,6 +17,10 @@ export class FfmpegManager {
   startCamera(camera: CameraConfig) {
     const id = camera.id;
     const cameraDir = camera.hlsFolder ? camera.hlsFolder : path.join(this.baseHlsDir, id);
+
+    if(fs.existsSync(cameraDir)) {
+      this.cleanupCameraFiles(id);
+    }
     if (!fs.existsSync(cameraDir)) fs.mkdirSync(cameraDir, { recursive: true });
 
     // jika sudah jalan, jangan start ulang
@@ -94,7 +98,6 @@ export class FfmpegManager {
     if (!p) return;
     p.kill("SIGINT");
     this.procs[id] = null;
-
   }
 
   startAll(cameras: CameraConfig[]) {

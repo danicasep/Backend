@@ -9,12 +9,26 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
   /** @use HasFactory<\Database\Factories\UserFactory> */
-  use HasFactory, Notifiable, SoftDeletes;
+  use HasFactory, Notifiable, SoftDeletes, HasApiTokens;
 
+  /**
+   * The name of the "created at" column.
+   *
+   * @var string|null
+   */
+  const CREATED_AT = 'createdAt';
+
+  /**
+   * The name of the "updated at" column.
+   *
+   * @var string|null
+   */
+  const UPDATED_AT = 'updatedAt';
   /**
    * The attributes that should be hidden for serialization.
    *

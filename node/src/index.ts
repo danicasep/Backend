@@ -64,7 +64,45 @@ app.post("/api/connect", (req, res) => {
 
   res.json({ ok: true });
 });
+
+app.get("/api/update-camera/stop/:id", async (req, res) =>  {
+  const { id } = req.params;
+  const { token } = req.headers;
+  if (token !== process.env.TOKEN) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  manager.stopCamera(id);
+  res.json({ ok: true });
+});
+
+app.get("/api/update-camera/stop/:id", async (req, res) =>  {
+  const { id } = req.params;
+  const { token } = req.headers;
+  if (token !== process.env.TOKEN) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  const database = new Database();
+  const row = await database.select('SELECT id, name, rtspUrl FROM cctv WHERE deleted_at IS NULL AND id = ?', [id]);
+  if (row.length === 0) {
+    return res.status(404).json({ error: "Camera not found" });
+  }
+  const camera: CameraConfig = {
+    id: row[0].id,
+    rtspUrl: row[0].rtspUrl,
+    name: row[0].name,
+    hlsFolder: `${HLS_DIR}/cam_${row[0].id}`,
+  };
+  manager.startCamera(camera);
+  res.json({ ok: true });
+});
+
 app.get("/api/camera/restart", async (req, res) =>  {
+  const { token } = req.headers;
+  if (token !== process.env.TOKEN) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
   await initCameras(true);
   res.json({ ok: true });
 });

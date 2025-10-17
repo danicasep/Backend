@@ -30,7 +30,7 @@ class UserMiddleware
         "errors" => null
       ], 404);
 
-      if (!$user->is_active) {
+      if (!$user->isActive) {
         return response()->json([
           "status" => false,
           "message" => "Akun anda sudah dinonaktifkan",
