@@ -43,10 +43,10 @@ class CctvController extends Controller
   function form(Request $request, $id = null)
   {
     $validation = new ValidationHelper;
-    $validation->setRules("cctvCategoryId", "Category",     "required|exists:cctv_categories,id");
-    $validation->setRules("name",           "Name",         "required|string|max:255");
-    $validation->setRules("description",    "Description",  "nullable|string|max:1000");
-    $validation->setRules("rtspUrl",        "RTSP URL",     "required|string|max:1000");
+    $validation->setRules("cctvCategoryId",     "Category",     "required|exists:cctv_categories,id");
+    $validation->setRules("name",               "Name",         "required|string|max:255");
+    $validation->setRules("description",        "Description",  "nullable|string|max:1000");
+    $validation->setRules("rtspUrl",            "RTSP URL",     "required|string|max:1000");
     $validation->run();
 
     if ($validation->fails()) {
@@ -70,10 +70,10 @@ class CctvController extends Controller
     $cctvHelper->stopCamera($id);
     $cctvHelper->startCamera($id);
 
-    $cctv->cctvCategoryId  = $request->cctvCategoryId;
-    $cctv->name            = $request->name;
-    $cctv->description     = $request->description;
-    $cctv->rtspUrl         = $request->rtspUrl;
+    $cctv->cctvCategoryId     = $request->cctvCategoryId;
+    $cctv->name               = $request->name;
+    $cctv->description        = $request->description;
+    $cctv->rtspUrl            = $request->rtspUrl;
     $cctv->save();
 
     return response()->json([

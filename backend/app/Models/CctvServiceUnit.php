@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CctvCategory extends Model
+class CctvServiceUnit extends Model
 {
   use SoftDeletes;
   /**
@@ -21,17 +21,7 @@ class CctvCategory extends Model
    * @var string|null
    */
   const UPDATED_AT = 'updatedAt';
-  protected $table = "cctv_categories";
+  protected $table = "cctv_service_units";
 
   protected $guarded = [];
-
-  function cctvs()
-  {
-    return $this->hasMany(Cctv::class, "cctvCategoryId", "id");
-  }
-
-  public function serviceUnit()
-  {
-    return $this->belongsTo(CctvServiceUnit::class, "serviceUnitId", "id");
-  }
 }

@@ -9,9 +9,19 @@ use Illuminate\Http\Request;
 
 class CctvCategoryController extends Controller
 {
+  function unit()
+  {
+    $units = \App\Models\CctvServiceUnit::orderBy("name", "ASC")->get();
+
+    return response()->json([
+      "status"  => true,
+      "record"  => $units
+    ]);
+  }
+
   function index(Request $request)
   {
-    $categories = \App\Models\CctvCategory::withCount("cctvs")->orderBy("name", "ASC")->get();
+    $categories = \App\Models\CctvCategory::withCount("cctvs")->with(["serviceUnit"])->orderBy("name", "ASC")->get();
 
     return response()->json([
       "status"  => true,
@@ -21,7 +31,7 @@ class CctvCategoryController extends Controller
 
   function show(Request $request, $id)
   {
-    $category = CctvCategory::withCount("cctvs")->where("id", $id)->first();
+    $category = CctvCategory::withCount("cctvs")->with(["serviceUnit"])->where("id", $id)->first();
 
     if (!$category) {
       return response()->json([
@@ -39,7 +49,8 @@ class CctvCategoryController extends Controller
   function form(Request $request, $id = null)
   {
     $validation = new ValidationHelper;
-    $validation->setRules("name", "Name", "required|string|max:255");
+    $validation->setRules("name",           "Name",         "required|string|max:255");
+    $validation->setRules("serviceUnitId",  "Service Unit", "required|exists:cctv_service_units,id");
     $validation->run();
 
     if ($validation->fails()) {
@@ -59,7 +70,8 @@ class CctvCategoryController extends Controller
       ], 404);
     }
 
-    $category->name     = $request->name;
+    $category->name           = $request->name;
+    $category->serviceUnitId  = $request->serviceUnitId;
     $category->save();
 
     return response()->json([

@@ -76,7 +76,7 @@ app.get("/api/update-camera/stop/:id", async (req, res) =>  {
   res.json({ ok: true });
 });
 
-app.get("/api/update-camera/stop/:id", async (req, res) =>  {
+app.get("/api/update-camera/play/:id", async (req, res) =>  {
   const { id } = req.params;
   const { token } = req.headers;
   if (token !== process.env.TOKEN) {

@@ -8,22 +8,19 @@ use Illuminate\Http\Request;
 
 class CctvController extends Controller
 {
-  function category()
+  function category(Request $request, $unitId)
   {
-    $categories = CctvCategory::orderBy("name", "ASC")->get();
+    $categories = CctvCategory::where("serviceUnitId", $unitId)->orderBy("name", "ASC")->get();
+
     return response()->json([
       "status"  => true,
       "record"  => $categories
     ]);
   }
 
-  function index(Request $request, $categoryId = null)
+  function index(Request $request, $categoryId)
   {
-    $cctv = Cctv::with(["category"])->where("isActive", true);
-
-    if ($categoryId) {
-      $cctv = $cctv->where("cctvCategoryId", $categoryId);
-    }
+    $cctv = Cctv::with(["category"])->where("isActive", true)->where("cctvCategoryId", $categoryId);
 
     $cctv = $cctv->orderBy("name", "ASC")->get();
 

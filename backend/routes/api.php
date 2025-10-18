@@ -10,14 +10,17 @@ Route::prefix("v1")->group(function () {
     Route::post("/login", [\App\Http\Controllers\AuthController::class, 'login']);
 
     Route::prefix("cctv")->group(function () {
-      Route::get('/categories',       [\App\Http\Controllers\CctvController::class, 'category']);
-      Route::get('/list/{categoryId}', [\App\Http\Controllers\CctvController::class, 'index']);
-      Route::get('/detail/{id}',      [\App\Http\Controllers\CctvController::class, 'show']);
+      Route::get('/categories/{unitId}',      [\App\Http\Controllers\CctvController::class, 'category']);
+      Route::get('/list/{categoryId}',        [\App\Http\Controllers\CctvController::class, 'index']);
+      Route::get('/{id}',                     [\App\Http\Controllers\CctvController::class, 'show']);
     });
 
     Route::middleware([UserMiddleware::class])->group(function () {
       Route::prefix("user")->group(function () {
         Route::prefix("cctv")->group(function () {
+
+          Route::get('/units',           [\App\Http\Controllers\Admin\CctvCategoryController::class, 'unit']);
+
           Route::prefix("categories")->group(function () {
             Route::get('/',             [\App\Http\Controllers\Admin\CctvCategoryController::class, 'index']);
             Route::get('/{id}',         [\App\Http\Controllers\Admin\CctvCategoryController::class, 'show']);
