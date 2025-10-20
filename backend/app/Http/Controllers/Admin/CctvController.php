@@ -7,6 +7,7 @@ use App\Helpers\ValidationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Cctv;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CctvController extends Controller
 {
@@ -67,20 +68,32 @@ class CctvController extends Controller
     }
 
     $cctvHelper = new CctvHelper();
-    if($id) $cctvHelper->stopCamera($id);
-    $cctvHelper->startCamera($id);
 
-    $cctv->cctvCategoryId     = $request->cctvCategoryId;
-    $cctv->name               = $request->name;
-    $cctv->description        = $request->description;
-    $cctv->rtspUrl            = $request->rtspUrl;
-    $cctv->save();
+    try {
+      DB::beginTransaction();
 
-    return response()->json([
-      "status"  => true,
-      "message" => $id ? "CCTV updated successfully" : "CCTV created successfully",
-      "record"  => $cctv
-    ]);
+      $cctv->cctvCategoryId     = $request->cctvCategoryId;
+      $cctv->name               = $request->name;
+      $cctv->description        = $request->description;
+      $cctv->rtspUrl            = $request->rtspUrl;
+      $cctv->save();
+
+      DB::commit();
+      if ($id) $cctvHelper->stopCamera($id);
+      $cctvHelper->startCamera($id);
+
+      return response()->json([
+        "status"  => true,
+        "message" => $id ? "CCTV updated successfully" : "CCTV created successfully",
+        "record"  => $cctv
+      ]);
+    } catch (\Throwable $th) {
+      DB::rollBack();
+      return response()->json([
+        "status"  => false,
+        "message" => "An error occurred: " . $th->getMessage()
+      ], 500);
+    }
   }
 
   function updateStatus(Request $request, $id)
