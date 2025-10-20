@@ -67,7 +67,7 @@ class CctvController extends Controller
     }
 
     $cctvHelper = new CctvHelper();
-    $cctvHelper->stopCamera($id);
+    if($id) $cctvHelper->stopCamera($id);
     $cctvHelper->startCamera($id);
 
     $cctv->cctvCategoryId     = $request->cctvCategoryId;
