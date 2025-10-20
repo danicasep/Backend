@@ -10,6 +10,7 @@ Route::prefix("v1")->group(function () {
     Route::post("/login", [\App\Http\Controllers\AuthController::class, 'login']);
 
     Route::prefix("cctv")->group(function () {
+      Route::get('/paginate/{id}',            [\App\Http\Controllers\CctvController::class, 'detailPagination']);
       Route::get('/categories/{unitId}',      [\App\Http\Controllers\CctvController::class, 'category']);
       Route::get('/list/{categoryId}',        [\App\Http\Controllers\CctvController::class, 'index']);
       Route::get('/{id}',                     [\App\Http\Controllers\CctvController::class, 'show']);

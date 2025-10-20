@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Helpers\CctvHelper;
+use App\Helpers\GeneralHelper;
 use App\Helpers\ValidationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Cctv;
@@ -13,7 +14,18 @@ class CctvController extends Controller
 {
   function index(Request $request)
   {
-    $cctvs = Cctv::with(["category"])->orderBy("name", "ASC")->paginate($request->get("perPage", 10), "*", "page", $request->get("page", 1));
+    $cctvs = Cctv::with(["category"])->orderBy("name", "ASC");
+
+    if ($request->search) {
+      $searchTerm = strtolower(GeneralHelper::safeInput($request->search));
+      $cctvs = $cctvs->whereRaw('LOWER(name) LIKE ?', ["%$searchTerm%"]);
+    }
+
+    if ($request->cctvCategoryId && GeneralHelper::isValidInteger($request->cctvCategoryId)) {
+      $cctvs = $cctvs->where("cctvCategoryId", $request->cctvCategoryId);
+    }
+
+    $cctvs = $cctvs->paginate($request->get("perPage", 10), "*", "page", $request->get("page", 1));
 
     return response()->json([
       "status"  => true,
