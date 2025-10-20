@@ -17,10 +17,10 @@ class CctvHelper
   public function startCamera($id)
   {
     Log::info("Starting camera with ID: " . $id);
-    Log::info("CCTV Node URL: " . $this->url . "/api/update-camera/stop/{$id}");
+    Log::info("CCTV Node URL: " . $this->url . "/api/update-camera/play/{$id}");
     $response = Http::withHeaders([
       'Token' => env("NODE_TOKEN"),
-    ])->get($this->url . "/api/update-camera/start/{$id}")->throw();
+    ])->get($this->url . "/api/update-camera/play/{$id}")->throw();
     return $response->json();
   }
 
