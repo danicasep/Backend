@@ -80,7 +80,7 @@ class CctvController extends Controller
 
       DB::commit();
       if ($id) $cctvHelper->stopCamera($id);
-      $cctvHelper->startCamera($id);
+      $cctvHelper->startCamera($cctv->id);
 
       return response()->json([
         "status"  => true,
