@@ -33,7 +33,7 @@ initCameras();
 async function initCameras(isStopCameras = false) {
   const database = new Database();
   try {
-    const rows = await database.select('SELECT id, name, rtspUrl FROM cctv WHERE deleted_at IS NULL');
+    const rows = await database.select('SELECT id, name, rtspUrl FROM cctv WHERE deleted_at IS NULL AND isActive = 1');
     cameras = rows.map(row => ({
       id: row.id,
       rtspUrl: row.rtspUrl,
@@ -65,7 +65,7 @@ app.post("/api/connect", (req, res) => {
   res.json({ ok: true });
 });
 
-app.get("/api/update-camera/stop/:id", async (req, res) =>  {
+app.get("/api/update-camera/stop/:id", async (req, res) => {
   const { id } = req.params;
   const { token } = req.headers;
   if (token !== process.env.TOKEN) {
@@ -76,7 +76,7 @@ app.get("/api/update-camera/stop/:id", async (req, res) =>  {
   res.json({ ok: true });
 });
 
-app.get("/api/update-camera/play/:id", async (req, res) =>  {
+app.get("/api/update-camera/play/:id", async (req, res) => {
   const { id } = req.params;
   const { token } = req.headers;
   if (token !== process.env.TOKEN) {
@@ -98,7 +98,7 @@ app.get("/api/update-camera/play/:id", async (req, res) =>  {
   res.json({ ok: true });
 });
 
-app.get("/api/camera/restart", async (req, res) =>  {
+app.get("/api/camera/restart", async (req, res) => {
   const { token } = req.headers;
   if (token !== process.env.TOKEN) {
     return res.status(403).json({ error: "Forbidden" });
@@ -121,3 +121,7 @@ app.listen(PORT, () => {
   console.log(`Server listening on http://0.0.0.0:${PORT}`);
   console.log(`Viewer: http://0.0.0.0:${PORT}/`);
 });
+
+setInterval(async () => {
+  initCameras(true);
+}, 60 * 60 * 1000); // keep alive every 1 hour
