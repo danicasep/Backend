@@ -12,7 +12,11 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3333;
 const HLS_DIR = "./hls";
 const CAMERA_CONFIG = "./config/camera.json";
 
-app.use(cors({ origin: "*" }));
+app.use(cors({ 
+  origin: "*",
+  allowedHeaders: ["Content-Type", "Range"],
+  exposedHeaders: ["Content-Length", "Content-Range"]
+}));
 
 let cameras: CameraConfig[] = [];
 
@@ -51,7 +55,15 @@ async function initCameras(isStopCameras = false) {
 }
 
 // static serve HLS folder and public
-app.use("/hls", express.static(HLS_DIR));
+app.use("/hls", express.static(HLS_DIR, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith(".m3u8")) {
+      res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
+    } else if (filePath.endsWith(".ts")) {
+      res.setHeader("Content-Type", "video/mp2t");
+    }
+  }
+}));
 app.use("/public", express.static(path.join(__dirname, "..", "public")));
 
 // endpoint untuk menambah/ubah kamera runtime (opsional)
