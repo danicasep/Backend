@@ -47,9 +47,11 @@ export class FfmpegManager {
       "-hls_segment_filename", path.join(cameraDir, "seg-%Y%m%d-%H%M%S.ts"),
       path.join(cameraDir, "index.m3u8"),
     ];
+    console.log(`Camera dir ${cameraDir} is exists: ${fs.existsSync(cameraDir)}`);
+    console.log("Current working directory:", process.cwd());
 
     console.log(`Starting ffmpeg for ${id}: ffmpeg ${args.join(" ")}`);
-    const p = spawn("ffmpeg", args, { stdio: ["ignore", "pipe", "pipe"] });
+    const p = spawn("ffmpeg", args, { stdio: ["ignore", "pipe", "pipe"]});
     this.procs[id] = p;
 
     p.stdout.on("data", d => console.log(`[ffmpeg ${id} stdout] ${d}`));
