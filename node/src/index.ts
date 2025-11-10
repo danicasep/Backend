@@ -44,9 +44,9 @@ async function initCameras(isStopCameras = false) {
       name: row.name,
       hlsFolder: `${HLS_DIR}/cam_${row.id}`,
     }));
-    console.log(`Loaded ${cameras.length} cameras from database.`);
-
     const manager = new FfmpegManager(HLS_DIR);
+    manager.logConsole(`Loaded ${cameras.length} cameras from database.`);
+
     if (isStopCameras) manager.stopAll();
     manager.startAll(cameras);
   } catch (err) {

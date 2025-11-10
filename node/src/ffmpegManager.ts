@@ -25,7 +25,7 @@ export class FfmpegManager {
 
     // jika sudah jalan, jangan start ulang
     if (this.procs[id]) {
-      console.log(`ffmpeg for ${id} already running`);
+      this.logConsole(`ffmpeg for ${id} already running`);
       return;
     }
 
@@ -47,10 +47,10 @@ export class FfmpegManager {
       "-hls_segment_filename", path.join(cameraDir, "seg-%Y%m%d-%H%M%S.ts"),
       path.join(cameraDir, "index.m3u8"),
     ];
-    console.log(`Camera dir ${cameraDir} is exists: ${fs.existsSync(cameraDir)}`);
-    console.log("Current working directory:", process.cwd());
+    this.logConsole(`Camera dir ${cameraDir} is exists: ${fs.existsSync(cameraDir)}`);
+    this.logConsole("Current working directory:" + process.cwd());
 
-    console.log(`Starting ffmpeg for ${id}: ffmpeg ${args.join(" ")}`);
+    this.logConsole(`Starting ffmpeg for ${id}: ffmpeg ${args.join(" ")}`);
     const p = spawn("ffmpeg", args, { stdio: ["ignore", "pipe", "pipe"]});
     this.procs[id] = p;
 
@@ -58,18 +58,18 @@ export class FfmpegManager {
     // p.stderr.on("data", d => console.log(`[ffmpeg ${id} stderr] ${d}`));
 
     p.on("exit", (code, sig) => {
-      console.log(`ffmpeg for ${id} exited code=${code} sig=${sig}`);
+      this.logConsole(`ffmpeg for ${id} exited code=${code} sig=${sig}`);
       this.procs[id] = null;
     });
 
     p.on("error", (error) => {
-      console.error(`ffmpeg for ${id} process error:`, error);
+      this.logConsole(`ffmpeg for ${id} process error: ${error}`);
       this.procs[id] = null;
     });
 
     p.on('close', (code, sig) => {
       if (code !== 0) {
-        console.log(`ffmpeg close process exited with code=${code} sig=${sig}`);
+        this.logConsole(`ffmpeg close process exited with code=${code} sig=${sig}`);
       }
     });
   }
@@ -88,10 +88,10 @@ export class FfmpegManager {
           }
         }
 
-        console.log(`Cleaned up all files for camera ${cameraId}`);
+        this.logConsole(`Cleaned up all files for camera ${cameraId}`);
       }
     } catch (error) {
-      console.error(`Error cleaning up camera ${cameraId}:`, error);
+      this.logConsole(`Error cleaning up camera ${cameraId}: ${error}`);
     }
   }
 
@@ -108,5 +108,9 @@ export class FfmpegManager {
 
   stopAll() {
     for (const id in this.procs) this.stopCamera(id);
+  }
+
+  logConsole(text: string) {
+    console.log(`[${new Date().toISOString()}]: ${text}`);
   }
 }
