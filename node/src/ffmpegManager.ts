@@ -57,8 +57,8 @@ export class FfmpegManager {
     const p = spawn("ffmpeg", args, { stdio: ["ignore", "pipe", "pipe"] });
     this.procs[id] = p;
 
-    // p.stdout.on("data", d => console.log(`[ffmpeg ${id} stdout] ${d}`));
-    p.stderr.on("data", d => console.log(`[ffmpeg ${id} stderr] ${d}`));
+    p.stdout.on("data", d => console.log(`[ffmpeg ${id} stdout] ${d}`));
+    // p.stderr.on("data", d => console.log(`[ffmpeg ${id} stderr] ${d}`));
 
     p.on("exit", (code, sig) => {
       this.logConsole(`ffmpeg for ${id} exited code=${code} sig=${sig}`);
