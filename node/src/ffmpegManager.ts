@@ -18,7 +18,7 @@ export class FfmpegManager {
     const id = camera.id;
     const cameraDir = camera.hlsFolder ? camera.hlsFolder : path.join(this.baseHlsDir, id);
 
-    if(fs.existsSync(cameraDir)) {
+    if (fs.existsSync(cameraDir)) {
       this.cleanupCameraFiles(id);
     }
     if (!fs.existsSync(cameraDir)) fs.mkdirSync(cameraDir, { recursive: true });
@@ -31,31 +31,34 @@ export class FfmpegManager {
 
     // contoh opsi ffmpeg untuk low-latency HLS
     const args = [
+      "-y",
+      "-nostdin",
       "-rtsp_transport", "tcp",
       "-i", camera.rtspUrl,
       "-c:v", "copy",
-      "-c:a", "aac",
+      "-an",
       "-f", "hls",
       "-hls_time", "3",
       "-hls_list_size", "10",
+      "-hls_segment_type", "fmp4",
       "-reconnect", "1",
       "-reconnect_at_eof", "1",
       "-reconnect_streamed", "1",
       "-reconnect_delay_max", "2",
       "-hls_flags", "delete_segments+program_date_time+omit_endlist",
       "-strftime", "1",
-      "-hls_segment_filename", path.join(cameraDir, "seg-%Y%m%d-%H%M%S.ts"),
+      "-hls_segment_filename", path.join(cameraDir, "seg-%Y%m%d-%H%M%S.m4s"),
       path.join(cameraDir, "index.m3u8"),
     ];
     this.logConsole(`Camera dir ${cameraDir} is exists: ${fs.existsSync(cameraDir)}`);
     this.logConsole("Current working directory:" + process.cwd());
 
     this.logConsole(`Starting ffmpeg for ${id}: ffmpeg ${args.join(" ")}`);
-    const p = spawn("ffmpeg", args, { stdio: ["ignore", "pipe", "pipe"]});
+    const p = spawn("ffmpeg", args, { stdio: ["ignore", "pipe", "pipe"] });
     this.procs[id] = p;
 
-    p.stdout.on("data", d => console.log(`[ffmpeg ${id} stdout] ${d}`));
-    // p.stderr.on("data", d => console.log(`[ffmpeg ${id} stderr] ${d}`));
+    // p.stdout.on("data", d => console.log(`[ffmpeg ${id} stdout] ${d}`));
+    p.stderr.on("data", d => console.log(`[ffmpeg ${id} stderr] ${d}`));
 
     p.on("exit", (code, sig) => {
       this.logConsole(`ffmpeg for ${id} exited code=${code} sig=${sig}`);
@@ -68,9 +71,7 @@ export class FfmpegManager {
     });
 
     p.on('close', (code, sig) => {
-      if (code !== 0) {
-        this.logConsole(`ffmpeg close process exited with code=${code} sig=${sig}`);
-      }
+      this.logConsole(`ffmpeg close process exited with code=${code} sig=${sig}`);
     });
   }
 
