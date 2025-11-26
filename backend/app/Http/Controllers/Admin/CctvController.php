@@ -169,4 +169,25 @@ class CctvController extends Controller
       "message" => "All CCTV streams have been restarted successfully"
     ]);
   }
+
+  function restartCctv(Request $request, $id)
+  {
+    $cctv = Cctv::find($id);
+
+    if (!$cctv) {
+      return response()->json([
+        "status"  => false,
+        "message" => "CCTV not found"
+      ], 404);
+    }
+
+    $cctvHelper = new CctvHelper();
+    $cctvHelper->startCamera($id);
+
+    return response()->json([
+      "status"  => true,
+      "message" => "CCTV stream has been restarted successfully",
+      "record"  => $cctv
+    ]);
+  }
 }

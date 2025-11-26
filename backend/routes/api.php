@@ -31,6 +31,7 @@ Route::prefix("v1")->group(function () {
 
           Route::prefix("camera")->group(function () {
             Route::get('/restart-all',  [\App\Http\Controllers\Admin\CctvController::class, 'restartAllCctvs']);
+            Route::get('/restart/{id}',  [\App\Http\Controllers\Admin\CctvController::class, 'restartCctv']);
           });
 
           Route::prefix("/")->group(function () {

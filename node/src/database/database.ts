@@ -19,4 +19,9 @@ export class Database {
     const [rows] = await this.pool.execute(query, params);
     return rows as any[];
   }
+
+  public async updateCctvStatus(id:any, status: boolean): Promise<void> {
+    const query = 'UPDATE cctv SET cctvStatus = ? WHERE id = ?';
+    await this.pool.execute(query, [status ? 1 : 0, id]);
+  }
 }
