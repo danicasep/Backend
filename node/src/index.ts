@@ -135,5 +135,16 @@ app.listen(PORT, () => {
 });
 
 setInterval(async () => {
-  initCameras(true);
-}, 60 * 60 * 1000); // keep alive every 1 hour
+  const database = new Database();
+  const cameras = await database.select('SELECT id FROM cctv WHERE deleted_at IS NULL AND isActive = 1 AND cctvStatus = 0');
+
+  cameras.map((cam: any) => {
+    const camera: CameraConfig = {
+      id: cam.id,
+      rtspUrl: cam.rtspUrl,
+      name: cam.name,
+      hlsFolder: `${HLS_DIR}/cam_${cam.id}`,
+    };
+    manager.startCamera(camera);
+  });
+}, 10 * 60 * 1000); // keep alive every 10 minutes
