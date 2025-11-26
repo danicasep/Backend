@@ -145,6 +145,7 @@ setInterval(async () => {
       name: cam.name,
       hlsFolder: `${HLS_DIR}/cam_${cam.id}`,
     };
+    manager.stopCamera(cam.id);
     manager.startCamera(camera);
   });
 }, 10 * 60 * 1000); // keep alive every 10 minutes
