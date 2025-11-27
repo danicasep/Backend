@@ -30,7 +30,7 @@ try {
   process.exit(1);
 }
 
-const manager = new FfmpegManager(HLS_DIR);
+const manager = new FfmpegManager(HLS_DIR, database);
 
 initCameras();
 
@@ -44,7 +44,7 @@ async function initCameras(isStopCameras = false) {
       name: row.name,
       hlsFolder: `${HLS_DIR}/cam_${row.id}`,
     }));
-    const manager = new FfmpegManager(HLS_DIR);
+    const manager = new FfmpegManager(HLS_DIR, database);
     manager.logConsole(`Loaded ${cameras.length} cameras from database.`);
 
     if (isStopCameras) manager.stopAll();

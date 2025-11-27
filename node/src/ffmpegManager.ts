@@ -9,16 +9,17 @@ type ProcMap = Record<string, ChildProcess | null>;;
 export class FfmpegManager {
   baseHlsDir: string;
   procs: ProcMap = {};
+  database: Database;
 
-  constructor(baseHlsDir = "../hls") {
+  constructor(baseHlsDir = "../hls", database: Database) {
     this.baseHlsDir = baseHlsDir;
+    this.database = database;
     if (!fs.existsSync(this.baseHlsDir)) fs.mkdirSync(this.baseHlsDir, { recursive: true });
   }
 
   startCamera(camera: CameraConfig) {
     const id = camera.id;
     const cameraDir = camera.hlsFolder ? camera.hlsFolder : path.join(this.baseHlsDir, id);
-    const database = new Database();
     if (fs.existsSync(cameraDir)) {
       this.cleanupCameraFiles(id);
     }
@@ -69,7 +70,7 @@ export class FfmpegManager {
     this.logConsole(`Camera dir ${cameraDir} is exists: ${fs.existsSync(cameraDir)}`);
     this.logConsole("Current working directory:" + process.cwd());
 
-    database.updateCctvStatus(id, true).catch(err => {
+    this.database.updateCctvStatus(id, true).catch(err => {
       this.logConsole(`Failed to update CCTV status for ${id}: ${err}`);
     });
 
@@ -88,14 +89,14 @@ export class FfmpegManager {
     p.on("error", (error) => {
       this.logConsole(`ffmpeg for ${id} process error: ${error}`);
       this.procs[id] = null;
-      database.updateCctvStatus(id, false).catch(err => {
+      this.database.updateCctvStatus(id, false).catch(err => {
         this.logConsole(`Failed to update CCTV status for ${id}: ${err}`);
       });
     });
 
     p.on('close', (code, sig) => {
       this.logConsole(`ffmpeg close process exited with code=${code} sig=${sig}`);
-      database.updateCctvStatus(id, false).catch(err => {
+      this.database.updateCctvStatus(id, false).catch(err => {
         this.logConsole(`Failed to update CCTV status for ${id}: ${err}`);
       });
     });
