@@ -20,6 +20,7 @@ app.use(cors({
 
 let cameras: CameraConfig[] = [];
 
+const database = new Database();
 // baca config kamera
 try {
   const raw = fs.readFileSync(CAMERA_CONFIG, "utf-8");
@@ -35,7 +36,6 @@ initCameras();
 
 // inisialisasi kamera dari database
 async function initCameras(isStopCameras = false) {
-  const database = new Database();
   try {
     const rows = await database.select('SELECT id, name, rtspUrl FROM cctv WHERE deleted_at IS NULL AND isActive = 1');
     cameras = rows.map(row => ({
@@ -95,7 +95,6 @@ app.get("/api/update-camera/play/:id", async (req, res) => {
     return res.status(403).json({ error: "Forbidden" });
   }
 
-  const database = new Database();
   const row = await database.select('SELECT id, name, rtspUrl FROM cctv WHERE deleted_at IS NULL AND id = ?', [id]);
   if (row.length === 0) {
     return res.status(404).json({ error: "Camera not found" });
@@ -135,7 +134,6 @@ app.listen(PORT, () => {
 });
 
 setInterval(async () => {
-  const database = new Database();
   const cameras = await database.select('SELECT id, rtspUrl, name FROM cctv WHERE deleted_at IS NULL AND isActive = 1 AND cctvStatus = 0');
 
   cameras.map((cam: any) => {
