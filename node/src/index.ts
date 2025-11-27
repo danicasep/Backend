@@ -136,6 +136,7 @@ app.listen(PORT, () => {
 setInterval(async () => {
   const cameras = await database.select('SELECT id, rtspUrl, name FROM cctv WHERE deleted_at IS NULL AND isActive = 1 AND cctvStatus = 0');
 
+  console.log(`Starting keep-alive for ${cameras.length} cameras`);
   cameras.map((cam: any) => {
     console.log(`Keeping alive camera ID ${cam.id}`);
     const camera: CameraConfig = {
